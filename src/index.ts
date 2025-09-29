@@ -230,10 +230,17 @@ class NanoBananaMCP {
       let textContent = "";
       
       // Get appropriate save directory based on OS
-      const imagesDir = this.getImagesDirectory();
-      
-      // Create directory
-      await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      let imagesDir = this.getImagesDirectory();
+
+      // Create directory with fallback
+      try {
+        await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      } catch (error) {
+        // Fallback to home directory if mkdir fails
+        const homeDir = os.homedir();
+        imagesDir = path.join(homeDir, 'nano-banana-images');
+        await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      }
       
       if (response.candidates && response.candidates[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
@@ -367,8 +374,17 @@ class NanoBananaMCP {
       let textContent = "";
       
       // Get appropriate save directory
-      const imagesDir = this.getImagesDirectory();
-      await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      let imagesDir = this.getImagesDirectory();
+
+      // Create directory with fallback
+      try {
+        await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      } catch (error) {
+        // Fallback to home directory if mkdir fails
+        const homeDir = os.homedir();
+        imagesDir = path.join(homeDir, 'nano-banana-images');
+        await fs.mkdir(imagesDir, { recursive: true, mode: 0o755 });
+      }
       
       // Extract image from response
       if (response.candidates && response.candidates[0]?.content?.parts) {
@@ -575,22 +591,28 @@ class NanoBananaMCP {
 
   private getImagesDirectory(): string {
     const platform = os.platform();
-    
+    const homeDir = os.homedir();
+
     if (platform === 'win32') {
       // Windows: Use Documents folder
-      const homeDir = os.homedir();
       return path.join(homeDir, 'Documents', 'nano-banana-images');
     } else {
-      // macOS/Linux: Use current directory or home directory if in system paths
+      // macOS/Linux: Use home directory for better compatibility
       const cwd = process.cwd();
-      const homeDir = os.homedir();
-      
-      // If in system directories, use home directory instead
-      if (cwd.startsWith('/usr/') || cwd.startsWith('/opt/') || cwd.startsWith('/var/')) {
+
+      // If in system directories or root directories, use home directory instead
+      if (cwd.startsWith('/usr/') || cwd.startsWith('/opt/') || cwd.startsWith('/var/') ||
+          cwd.startsWith('/bin/') || cwd.startsWith('/sbin/') || cwd === '/') {
         return path.join(homeDir, 'nano-banana-images');
       }
-      
-      return path.join(cwd, 'generated_imgs');
+
+      // For other directories, try to use current directory, but fallback to home if it fails
+      try {
+        const targetDir = path.resolve(cwd, 'generated_imgs');
+        return targetDir;
+      } catch (error) {
+        return path.join(homeDir, 'nano-banana-images');
+      }
     }
   }
 

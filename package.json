@@ -1,11 +1,11 @@
 {
-  "name": "nano-banana-mcp",
-  "version": "1.0.3",
+  "name": "nano-banana-mcp-safe",
+  "version": "1.0.1",
   "description": "MCP server for Google's Gemini 2.5 Flash Image generation API with cross-platform support",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "nano-banana-mcp": "./dist/index.js"
+    "nano-banana-mcp-safe": "./dist/index.js"
   },
   "files": [
     "dist/",
