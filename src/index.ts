@@ -225,7 +225,6 @@ class NanoBananaMCP {
       });
       
       // Process response to extract image data
-      const content: any[] = [];
       const savedFiles: string[] = [];
       let textContent = "";
       
@@ -260,13 +259,9 @@ class NanoBananaMCP {
             await fs.writeFile(filePath, imageBuffer);
             savedFiles.push(filePath);
             this.lastImagePath = filePath;
-            
-            // Add image to MCP response
-            content.push({
-              type: "image",
-              data: part.inlineData.data,
-              mimeType: part.inlineData.mimeType || "image/png",
-            });
+
+            // Note: Skip adding image data to avoid MCP response size limits
+            // Image is saved to disk and path is included in status text
           }
         }
       }
@@ -280,9 +275,8 @@ class NanoBananaMCP {
       
       if (savedFiles.length > 0) {
         statusText += `\n\n📁 Image saved to:\n${savedFiles.map(f => `- ${f}`).join('\n')}`;
-        statusText += `\n\n💡 View the image by:`;
-        statusText += `\n1. Opening the file at the path above`;
-        statusText += `\n2. Clicking on "Called generate_image" in Cursor to expand the MCP call details`;
+        statusText += `\n\n🖼️ **Note:** Due to response size limits, images are not displayed inline but are fully saved to disk.`;
+        statusText += `\n\n💡 View the image by opening the file at the path above.`;
         statusText += `\n\n🔄 To modify this image, use: continue_editing`;
         statusText += `\n📋 To check current image info, use: get_last_image_info`;
       } else {
@@ -290,13 +284,13 @@ class NanoBananaMCP {
         statusText += `\n\n💡 Tip: Try running the command again - sometimes the first call needs to warm up the model.`;
       }
       
-      // Add text content first
-      content.unshift({
-        type: "text",
-        text: statusText,
-      });
-      
-      return { content };
+      // Return only text content to avoid MCP response size limits
+      return {
+        content: [{
+          type: "text",
+          text: statusText,
+        }]
+      };
       
     } catch (error) {
       console.error("Error generating image:", error);
@@ -369,7 +363,6 @@ class NanoBananaMCP {
       });
       
       // Process response
-      const content: any[] = [];
       const savedFiles: string[] = [];
       let textContent = "";
       
@@ -406,15 +399,9 @@ class NanoBananaMCP {
               savedFiles.push(filePath);
               this.lastImagePath = filePath;
             }
-            
-            // Add to MCP response
-            if (part.inlineData.data) {
-              content.push({
-                type: "image",
-                data: part.inlineData.data,
-                mimeType: part.inlineData.mimeType || "image/png",
-              });
-            }
+
+            // Note: Skip adding image data to avoid MCP response size limits
+            // Image is saved to disk and path is included in status text
           }
         }
       }
@@ -432,9 +419,8 @@ class NanoBananaMCP {
       
       if (savedFiles.length > 0) {
         statusText += `\n\n📁 Edited image saved to:\n${savedFiles.map(f => `- ${f}`).join('\n')}`;
-        statusText += `\n\n💡 View the edited image by:`;
-        statusText += `\n1. Opening the file at the path above`;
-        statusText += `\n2. Clicking on "Called edit_image" in Cursor to expand the MCP call details`;
+        statusText += `\n\n🖼️ **Note:** Due to response size limits, images are not displayed inline but are fully saved to disk.`;
+        statusText += `\n\n💡 View the edited image by opening the file at the path above.`;
         statusText += `\n\n🔄 To continue editing, use: continue_editing`;
         statusText += `\n📋 To check current image info, use: get_last_image_info`;
       } else {
@@ -442,12 +428,13 @@ class NanoBananaMCP {
         statusText += `\n\n💡 Tip: Try running the command again - sometimes the first call needs to warm up the model.`;
       }
       
-      content.unshift({
-        type: "text",
-        text: statusText,
-      });
-      
-      return { content };
+      // Return only text content to avoid MCP response size limits
+      return {
+        content: [{
+          type: "text",
+          text: statusText,
+        }]
+      };
       
     } catch (error) {
       throw new McpError(
